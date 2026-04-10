@@ -1,0 +1,44 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.env
+venv/
+env/
+
+# ── ML Models (large binary files) ──
+*.pt
+*.pth
+*.task
+*.onnx
+
+# ── OpenCV temp ──
+*.wav
+*.mp3
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Node (frontend is separate) ──
+node_modules/
+.next/
+
+# ── Database ──
+*.db
+*.sqlite3
+
+# ── Vercel ──
+.vercel/
+
+# ── Gemini agent artifacts ──
+.gemini/

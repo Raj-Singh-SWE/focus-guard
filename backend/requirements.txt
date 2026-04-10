@@ -1,0 +1,26 @@
+# ──────────────────────────────────────────────
+# SafeDrive OS - Backend Dependencies
+# ──────────────────────────────────────────────
+
+# Web framework & server
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+websockets>=11.0.3
+
+# Database ORM
+sqlalchemy>=2.0.0
+
+# Computer Vision
+opencv-python>=4.8.0
+mediapipe>=0.10.0
+
+# Deep Learning (CUDA-enabled for RTX 4050)
+# Install PyTorch with CUDA 12.1 support:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics>=8.0.0
+
+# Utilities
+numpy>=1.24.0
+scipy>=1.10.0
