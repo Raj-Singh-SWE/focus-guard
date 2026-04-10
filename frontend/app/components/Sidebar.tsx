@@ -12,6 +12,7 @@ export function Sidebar() {
         { name: "Live Monitoring", href: "/dashboard", icon: Radio },
         { name: "Session History", href: "/dashboard/history", icon: Activity },
         { name: "Admin & Documents", href: "/dashboard/admin", icon: FileText },
+        { name: "Settings", href: "/dashboard/settings", icon: Settings },
     ];
 
     const handleLogout = () => {
@@ -41,8 +42,8 @@ export function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={`flex items-center px-3 py-2.5 rounded-lg font-medium transition-all ${isActive
-                                    ? "bg-indigo-500/10 text-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.05)]"
-                                    : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                                ? "bg-indigo-500/10 text-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.05)]"
+                                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                                 }`}
                         >
                             <item.icon className="w-5 h-5 mr-3" />

@@ -17,6 +17,8 @@ def get_or_create_default_user(db: Session) -> models.User:
         future = datetime.datetime.utcnow() + datetime.timedelta(days=180)
         user = models.User(
             name="Raj Singh",
+            dob=datetime.datetime(2005, 1, 1), # Default 21 years old
+            license_number="DL-12345-ABCD",
             license_expiry=future,
             insurance_expiry=future
         )

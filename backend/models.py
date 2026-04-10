@@ -10,6 +10,8 @@ class User(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
+    dob = Column(DateTime, nullable=True)
+    license_number = Column(String, nullable=True)
     license_expiry = Column(DateTime)
     insurance_expiry = Column(DateTime)
 

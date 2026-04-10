@@ -6,6 +6,7 @@ import { config } from "../../lib/config";
 
 interface UserProfile {
     name: string;
+    license_number: string;
     license_expiry: string;
     insurance_expiry: string;
 }
@@ -128,7 +129,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                         <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Name</p>
-                        <p className="text-slate-200 font-medium">Raj Singh</p>
+                        <p className="text-slate-200 font-medium">{profile ? profile.name : "Loading..."}</p>
                     </div>
                     <div>
                         <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Vehicle</p>
@@ -136,7 +137,7 @@ export default function AdminPage() {
                     </div>
                     <div>
                         <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">License #</p>
-                        <p className="text-slate-200 font-medium font-mono">DL-0520260012345</p>
+                        <p className="text-slate-200 font-medium font-mono">{profile ? (profile.license_number || "Not Set") : "Loading..."}</p>
                     </div>
                     <div>
                         <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Policy #</p>

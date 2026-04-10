@@ -9,16 +9,22 @@ class UserBase(BaseModel):
     name: str
 
 class UserCreate(UserBase):
+    dob: datetime
+    license_number: str
     license_expiry: datetime
     insurance_expiry: datetime
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
+    dob: Optional[datetime] = None
+    license_number: Optional[str] = None
     license_expiry: Optional[datetime] = None
     insurance_expiry: Optional[datetime] = None
 
 class UserResponse(UserBase):
     id: int
+    dob: datetime
+    license_number: str
     license_expiry: datetime
     insurance_expiry: datetime
 

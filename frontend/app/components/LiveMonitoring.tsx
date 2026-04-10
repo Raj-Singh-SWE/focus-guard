@@ -60,6 +60,10 @@ export function LiveMonitoring() {
     const alertCountRef = useRef(0);
     const sessionIdRef = useRef<number | null>(null);
 
+    // ── Age Enforcement ──
+    const [userAge, setUserAge] = useState<number | null>(null);
+    const [ageBlocker, setAgeBlocker] = useState(false);
+
     // ── FPS Tracking ──
     const [fps, setFps] = useState(0);
     const frameCountRef = useRef(0);
@@ -138,6 +142,64 @@ export function LiveMonitoring() {
     const dismissAlarm = useCallback(() => {
         setAlarmActive(false);
         setAlertType(null);
+    }, []);
+
+    const endDriveSession = useCallback(() => {
+        // Sync final stats to DB
+        if (sessionIdRef.current && sessionStart) {
+            const durationSecs = Math.floor((Date.now() - sessionStart) / 1000);
+            fetch(`${config.API_BASE_URL}/api/sessions/${sessionIdRef.current}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    duration: durationSecs,
+                    alerts_triggered: alertCountRef.current
+                })
+            }).catch(e => console.error("Failed to end SQL session:", e));
+        }
+
+        setSessionActive(false);
+        setSessionId(null);
+        sessionIdRef.current = null;
+        setIsConnected(false);
+        setConnectionState("idle");
+        setAlarmActive(false);
+        setAlertType(null);
+        setIsDrowsy(false);
+        setSeatbeltOn(true);
+        setIsDistracted(false);
+        setIsYawning(false);
+        setIsHeadDown(false);
+        setShowBreakReminder(false);
+
+        if (keepaliveRef.current) clearInterval(keepaliveRef.current);
+        videoWsRef.current?.close();
+        alertWsRef.current?.close();
+        videoWsRef.current = null;
+        alertWsRef.current = null;
+    }, [sessionStart]);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (audio) {
+            audio.removeEventListener("ended", () => setAlarmActive(false));
+            audio.pause();
+        }
+    }, [endDriveSession]);
+
+    // Fetch user age on mount
+    useEffect(() => {
+        fetch(`${config.API_BASE_URL}/api/user/1`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.dob) {
+                    const dob = new Date(data.dob);
+                    const ageDifMs = Date.now() - dob.getTime();
+                    const ageDate = new Date(ageDifMs);
+                    setUserAge(Math.abs(ageDate.getUTCFullYear() - 1970));
+                }
+            })
+            .catch(err => console.error("Could not fetch user profile for age check.", err));
     }, []);
 
     // ─────────────────────────────────────────────────
@@ -269,6 +331,12 @@ export function LiveMonitoring() {
     //  SESSION CONTROL
     // ─────────────────────────────────────────────────
     const startDriveSession = useCallback(async () => {
+        // Enforce Age limit
+        if (userAge !== null && userAge < 18) {
+            setAgeBlocker(true);
+            return;
+        }
+
         if (!audioCtxRef.current) {
             audioCtxRef.current = new AudioContext();
         }
@@ -304,42 +372,7 @@ export function LiveMonitoring() {
 
         connectVideoFeed();
         connectAlerts();
-    }, [connectVideoFeed, connectAlerts]);
-
-    const endDriveSession = useCallback(() => {
-        // Sync final stats to DB
-        if (sessionIdRef.current && sessionStart) {
-            const durationSecs = Math.floor((Date.now() - sessionStart) / 1000);
-            fetch(`${config.API_BASE_URL}/api/sessions/${sessionIdRef.current}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    duration: durationSecs,
-                    alerts_triggered: alertCountRef.current
-                })
-            }).catch(e => console.error("Failed to end SQL session:", e));
-        }
-
-        setSessionActive(false);
-        setSessionId(null);
-        sessionIdRef.current = null;
-        setIsConnected(false);
-        setConnectionState("idle");
-        setAlarmActive(false);
-        setAlertType(null);
-        setIsDrowsy(false);
-        setSeatbeltOn(true);
-        setIsDistracted(false);
-        setIsYawning(false);
-        setIsHeadDown(false);
-        setShowBreakReminder(false);
-
-        if (keepaliveRef.current) clearInterval(keepaliveRef.current);
-        videoWsRef.current?.close();
-        alertWsRef.current?.close();
-        videoWsRef.current = null;
-        alertWsRef.current = null;
-    }, [sessionStart]);
+    }, [connectVideoFeed, connectAlerts, userAge]);
 
     useEffect(() => {
         return () => {
@@ -391,7 +424,20 @@ export function LiveMonitoring() {
                 </div>
             )}
 
-            {/* VIDEO CANVAS */}
+            {/* AGE RESTRICTION BLOCKER */}
+            {ageBlocker && (
+                <div className="bg-red-500/10 border border-red-500/50 p-6 rounded-xl flex items-center text-red-400 shadow-[0_0_30px_rgba(239,68,68,0.2)] animate-in fade-in zoom-in duration-300">
+                    <span className="text-4xl mr-6">🛑</span>
+                    <div>
+                        <h4 className="font-bold text-lg tracking-wide text-red-300">Access Restricted</h4>
+                        <p className="text-sm opacity-90 mt-1">
+                            You must be at least 18 years old to operate this vehicle. Please update your Date of Birth in the Settings page if this is an error.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* MAIN VIDEO MONITORING AREA */}
             <div
                 className={`relative bg-black rounded-xl overflow-hidden shadow-lg transition-all duration-300 ${alarmActive
                     ? "border-4 border-red-500 animate-pulse shadow-[0_0_60px_rgba(220,38,38,0.5)]"
