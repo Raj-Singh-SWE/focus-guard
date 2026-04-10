@@ -1,0 +1,9 @@
+# SafeDrive OS Vercel Ignore Rules
+# ==================================
+# By default, Vercel tries to build all folders when imported from GitHub.
+# We MUST ignore the Python backend so Vercel doesn't try to install 
+# PyTorch and OpenCV in serverless functions (which exceeds the 50MB limit).
+
+backend/
+README.md
+.gitignore
