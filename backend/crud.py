@@ -6,33 +6,19 @@ import datetime
 # ─────────────────────────────────────────────────
 #  User CRUD
 # ─────────────────────────────────────────────────
-def get_user(db: Session, user_id: int):
-    return db.query(models.User).filter(models.User.id == user_id).first()
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()
 
-def get_or_create_default_user(db: Session) -> models.User:
-    """Ensures at least one user exists for the prototype"""
-    user = get_user(db, 1)
-    if not user:
-        # Default user with expirations 6 months from now
-        future = datetime.datetime.utcnow() + datetime.timedelta(days=180)
-        user = models.User(
-            name="Raj Singh",
-            dob=datetime.datetime(2005, 1, 1), # Default 21 years old
-            license_number="DL-12345-ABCD",
-            license_expiry=future,
-            insurance_expiry=future
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    return user
-
-def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate):
-    db_user = get_user(db, user_id)
-    if not db_user:
-        return None
+def create_or_update_user(db: Session, email: str, user_update: schemas.UserUpdate):
+    db_user = get_user_by_email(db, email)
     
     update_data = user_update.model_dump(exclude_unset=True)
+    
+    if not db_user:
+        # Create new user
+        db_user = models.User(email=email)
+        db.add(db_user)
+        
     for key, value in update_data.items():
         setattr(db_user, key, value)
     

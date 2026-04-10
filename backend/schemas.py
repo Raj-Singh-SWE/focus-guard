@@ -6,6 +6,7 @@ from typing import Optional
 #  User Schemas
 # ─────────────────────────────────────────────────
 class UserBase(BaseModel):
+    email: str
     name: str
 
 class UserCreate(UserBase):
@@ -15,6 +16,7 @@ class UserCreate(UserBase):
     insurance_expiry: datetime
 
 class UserUpdate(BaseModel):
+    email: Optional[str] = None
     name: Optional[str] = None
     dob: Optional[datetime] = None
     license_number: Optional[str] = None

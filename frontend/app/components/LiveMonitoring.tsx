@@ -189,7 +189,8 @@ export function LiveMonitoring() {
 
     // Fetch user age on mount
     useEffect(() => {
-        fetch(`${config.API_BASE_URL}/api/user/1`)
+        const email = JSON.parse(localStorage.getItem("safedrive_user") || "{}").email || "driver@focusdrive.io";
+        fetch(`${config.API_BASE_URL}/api/user/${email}`)
             .then(res => res.json())
             .then(data => {
                 if (data.dob) {

@@ -31,7 +31,8 @@ export default function SettingsPage() {
     const currentAge = calculateAge(profile.dob);
 
     useEffect(() => {
-        fetch(`${config.API_BASE_URL}/api/user/1`)
+        const email = JSON.parse(localStorage.getItem("safedrive_user") || "{}").email || "driver@focusdrive.io";
+        fetch(`${config.API_BASE_URL}/api/user/${email}`)
             .then(res => res.json())
             .then(data => {
                 setProfile({
@@ -59,7 +60,8 @@ export default function SettingsPage() {
         setMessage("");
 
         try {
-            const res = await fetch(`${config.API_BASE_URL}/api/user/1`, {
+            const email = JSON.parse(localStorage.getItem("safedrive_user") || "{}").email || "driver@focusdrive.io";
+            const res = await fetch(`${config.API_BASE_URL}/api/user/${email}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

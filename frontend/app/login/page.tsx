@@ -38,7 +38,7 @@ export default function LoginPage() {
 
         try {
             // First, update the SQLite profile using the onboarding data
-            await fetch(`${config.API_BASE_URL}/api/user/1`, {
+            await fetch(`${config.API_BASE_URL}/api/user/${email}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

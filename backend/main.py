@@ -136,21 +136,18 @@ app.add_middleware(
 #  HTTP Endpoints (Database APIs)
 # ──────────────────────────────────────────────
 
-@app.get("/api/user/{user_id}", response_model=schemas.UserResponse)
-def get_user_profile(user_id: int, db: Session = Depends(get_db)):
-    if user_id == 1:
-        # Auto-create the default prototype user if requested
-        return crud.get_or_create_default_user(db)
-    user = crud.get_user(db, user_id=user_id)
+@app.get("/api/user/{email}", response_model=schemas.UserResponse)
+def get_user_profile(email: str, db: Session = Depends(get_db)):
+    user = crud.get_user_by_email(db, email=email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-@app.put("/api/user/{user_id}", response_model=schemas.UserResponse)
-def update_user_profile(user_id: int, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
-    updated_user = crud.update_user(db, user_id, user_update)
+@app.put("/api/user/{email}", response_model=schemas.UserResponse)
+def update_user_profile(email: str, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
+    updated_user = crud.create_or_update_user(db, email, user_update)
     if not updated_user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Failed to update or initialize user")
     return updated_user
 
 @app.get("/api/sessions", response_model=list[schemas.DrivingSessionResponse])
@@ -382,3 +379,4 @@ async def websocket_alerts(websocket: WebSocket):
     finally:
         manager.remove_alert(websocket)
         print(f"[Alerts] Client disconnected. Active: {len(manager.alert_clients)}")
+ 

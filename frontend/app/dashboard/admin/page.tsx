@@ -19,7 +19,8 @@ export default function AdminPage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
 
     useEffect(() => {
-        fetch(`${config.API_BASE_URL}/api/user/1`)
+        const email = JSON.parse(localStorage.getItem("safedrive_user") || "{}").email || "driver@focusdrive.io";
+        fetch(`${config.API_BASE_URL}/api/user/${email}`)
             .then((res) => res.json())
             .then((data) => setProfile(data))
             .catch((err) => console.error("Error fetching user", err));
