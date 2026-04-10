@@ -17,11 +17,14 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Set
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
-from database import engine, Base
+from database import engine, Base, get_db
 import models
+import schemas
+import crud
 from vision import VisionPipeline
 
 
@@ -100,8 +103,12 @@ _server_start_time = time.time()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup & shutdown hooks."""
-    print("[Server] SafeDrive OS backend starting...")
+    # Ensure database tables exist
+    models.Base.metadata.create_all(bind=engine)
+    
+    global _server_start_time
+    _server_start_time = time.time()
+    print("[Server] SafeDrive OS backend starting up...")
     Base.metadata.create_all(bind=engine)
     yield
     # Cleanup on shutdown
@@ -126,7 +133,43 @@ app.add_middleware(
 
 
 # ──────────────────────────────────────────────
-#  HTTP Endpoints
+#  HTTP Endpoints (Database APIs)
+# ──────────────────────────────────────────────
+
+@app.get("/api/user/{user_id}", response_model=schemas.UserResponse)
+def get_user_profile(user_id: int, db: Session = Depends(get_db)):
+    if user_id == 1:
+        # Auto-create the default prototype user if requested
+        return crud.get_or_create_default_user(db)
+    user = crud.get_user(db, user_id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@app.put("/api/user/{user_id}", response_model=schemas.UserResponse)
+def update_user_profile(user_id: int, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
+    updated_user = crud.update_user(db, user_id, user_update)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_user
+
+@app.get("/api/sessions", response_model=list[schemas.DrivingSessionResponse])
+def get_sessions(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+    return crud.get_driving_sessions(db, skip=skip, limit=limit)
+
+@app.post("/api/sessions", response_model=schemas.DrivingSessionResponse)
+def start_session(db: Session = Depends(get_db)):
+    return crud.create_driving_session(db)
+
+@app.put("/api/sessions/{session_id}", response_model=schemas.DrivingSessionResponse)
+def update_session(session_id: int, session: schemas.DrivingSessionUpdate, db: Session = Depends(get_db)):
+    updated = crud.update_driving_session(db, session_id, session)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return updated
+
+# ──────────────────────────────────────────────
+#  HTTP Endpoints (Health & Status)
 # ──────────────────────────────────────────────
 @app.get("/")
 def health_check():

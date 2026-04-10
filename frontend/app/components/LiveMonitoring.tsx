@@ -55,6 +55,11 @@ export function LiveMonitoring() {
     const [isLateNight, setIsLateNight] = useState(false);
     const [showBreakReminder, setShowBreakReminder] = useState(false);
 
+    const [sessionId, setSessionId] = useState<number | null>(null);
+    const [alertCount, setAlertCount] = useState(0);
+    const alertCountRef = useRef(0);
+    const sessionIdRef = useRef<number | null>(null);
+
     // ── FPS Tracking ──
     const [fps, setFps] = useState(0);
     const frameCountRef = useRef(0);
@@ -231,16 +236,18 @@ export function LiveMonitoring() {
                     setIsDistracted(false);
                     setIsYawning(false);
                     setIsHeadDown(false);
-                } else if (payload.event === "drowsiness") {
-                    setIsDrowsy(true);
-                } else if (payload.event === "distraction") {
-                    setIsDistracted(true);
-                } else if (payload.event === "seatbelt") {
-                    setSeatbeltOn(false);
-                } else if (payload.event === "yawning") {
-                    setIsYawning(true);
-                } else if (payload.event === "head_down") {
-                    setIsHeadDown(true);
+                } else {
+                    // Record an alert incident
+                    if (!alarmActive && (payload.event === "drowsiness" || payload.event === "distraction" || payload.event === "yawning" || payload.event === "head_down" || payload.event === "seatbelt")) {
+                        alertCountRef.current += 1;
+                        setAlertCount(alertCountRef.current);
+                    }
+
+                    if (payload.event === "drowsiness") setIsDrowsy(true);
+                    else if (payload.event === "distraction") setIsDistracted(true);
+                    else if (payload.event === "seatbelt") setSeatbeltOn(false);
+                    else if (payload.event === "yawning") setIsYawning(true);
+                    else if (payload.event === "head_down") setIsHeadDown(true);
                 }
             } catch {
                 /* ignore */
@@ -261,7 +268,7 @@ export function LiveMonitoring() {
     // ─────────────────────────────────────────────────
     //  SESSION CONTROL
     // ─────────────────────────────────────────────────
-    const startDriveSession = useCallback(() => {
+    const startDriveSession = useCallback(async () => {
         if (!audioCtxRef.current) {
             audioCtxRef.current = new AudioContext();
         }
@@ -269,8 +276,28 @@ export function LiveMonitoring() {
             audioCtxRef.current.resume();
         }
         const audio = audioRef.current;
-        if (audio) audio.load();
+        if (audio) {
+            audio.load();
+            audio.volume = 0;
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.volume = 1;
+            }).catch(() => { });
+        }
 
+        // Track session in DB
+        try {
+            const res = await fetch(`${config.API_BASE_URL}/api/sessions`, { method: "POST" });
+            const data = await res.json();
+            setSessionId(data.id);
+            sessionIdRef.current = data.id;
+        } catch (e) {
+            console.error("Failed to start SQL session:", e);
+        }
+
+        alertCountRef.current = 0;
+        setAlertCount(0);
         setSessionStart(Date.now());
         setShowBreakReminder(false);
         setSessionActive(true);
@@ -280,7 +307,22 @@ export function LiveMonitoring() {
     }, [connectVideoFeed, connectAlerts]);
 
     const endDriveSession = useCallback(() => {
+        // Sync final stats to DB
+        if (sessionIdRef.current && sessionStart) {
+            const durationSecs = Math.floor((Date.now() - sessionStart) / 1000);
+            fetch(`${config.API_BASE_URL}/api/sessions/${sessionIdRef.current}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    duration: durationSecs,
+                    alerts_triggered: alertCountRef.current
+                })
+            }).catch(e => console.error("Failed to end SQL session:", e));
+        }
+
         setSessionActive(false);
+        setSessionId(null);
+        sessionIdRef.current = null;
         setIsConnected(false);
         setConnectionState("idle");
         setAlarmActive(false);
@@ -297,7 +339,7 @@ export function LiveMonitoring() {
         alertWsRef.current?.close();
         videoWsRef.current = null;
         alertWsRef.current = null;
-    }, []);
+    }, [sessionStart]);
 
     useEffect(() => {
         return () => {

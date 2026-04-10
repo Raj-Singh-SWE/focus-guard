@@ -1,23 +1,40 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Clock, Calendar, Activity, AlertTriangle } from "lucide-react";
+import { config } from "../../lib/config";
 
-/**
- * Session History page: placeholder for future session persistence.
- * Shows mock driving sessions for now.
- */
+interface SessionData {
+    id: number;
+    start_time: string;
+    duration: number; // in seconds
+    alerts_triggered: number;
+}
+
 export default function HistoryPage() {
-    // Mock session data — will be replaced with API calls
-    const sessions = [
-        { id: 1, date: "Apr 10, 2026", duration: "01:23:45", alerts: 3, status: "completed" },
-        { id: 2, date: "Apr 9, 2026", duration: "00:45:12", alerts: 0, status: "completed" },
-        { id: 3, date: "Apr 8, 2026", duration: "02:10:03", alerts: 7, status: "completed" },
-        { id: 4, date: "Apr 7, 2026", duration: "00:30:55", alerts: 1, status: "completed" },
-        { id: 5, date: "Apr 6, 2026", duration: "01:58:22", alerts: 2, status: "completed" },
-    ];
+    const [sessions, setSessions] = useState<SessionData[]>([]);
 
-    const totalDriveTime = "06:48:17";
-    const totalAlerts = sessions.reduce((sum, s) => sum + s.alerts, 0);
+    useEffect(() => {
+        fetch(`${config.API_BASE_URL}/api/sessions`)
+            .then(res => res.json())
+            .then(data => setSessions(data))
+            .catch(err => console.error("History fetch error:", err));
+    }, []);
+
+    const formatDuration = (totalSeconds: number) => {
+        const hrs = Math.floor(totalSeconds / 3600).toString().padStart(2, "0");
+        const mins = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, "0");
+        const secs = Math.floor(totalSeconds % 60).toString().padStart(2, "0");
+        return `${hrs}:${mins}:${secs}`;
+    };
+
+    const formatDate = (isoString: string) => {
+        return new Date(isoString).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    };
+
+    const totalSeconds = sessions.reduce((acc, s) => acc + s.duration, 0);
+    const totalDriveTime = formatDuration(totalSeconds);
+    const totalAlerts = sessions.reduce((sum, s) => sum + s.alerts_triggered, 0);
 
     return (
         <div className="space-y-6">
@@ -68,20 +85,26 @@ export default function HistoryPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {sessions.map((session) => (
+                        {sessions.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-8 text-center text-slate-500 text-sm">
+                                    No driving sessions recorded yet. Start a drive to log history!
+                                </td>
+                            </tr>
+                        ) : sessions.map((session) => (
                             <tr key={session.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
                                 <td className="px-6 py-4 text-slate-400 font-mono text-sm">{session.id}</td>
-                                <td className="px-6 py-4 text-slate-200 text-sm">{session.date}</td>
-                                <td className="px-6 py-4 text-slate-200 text-sm font-mono">{session.duration}</td>
+                                <td className="px-6 py-4 text-slate-200 text-sm">{formatDate(session.start_time)}</td>
+                                <td className="px-6 py-4 text-slate-200 text-sm font-mono">{formatDuration(session.duration)}</td>
                                 <td className="px-6 py-4">
-                                    <span className={`text-sm font-medium ${session.alerts > 5 ? "text-red-400" : session.alerts > 0 ? "text-amber-400" : "text-emerald-400"
+                                    <span className={`text-sm font-medium ${session.alerts_triggered > 5 ? "text-red-400" : session.alerts_triggered > 0 ? "text-amber-400" : "text-emerald-400"
                                         }`}>
-                                        {session.alerts}
+                                        {session.alerts_triggered}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full font-medium">
-                                        {session.status}
+                                        completed
                                     </span>
                                 </td>
                             </tr>

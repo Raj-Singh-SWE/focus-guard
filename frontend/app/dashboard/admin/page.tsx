@@ -1,19 +1,36 @@
 "use client";
 
 import { User, ShieldCheck, AlertCircle, Calendar, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { config } from "../../lib/config";
+
+interface UserProfile {
+    name: string;
+    license_expiry: string;
+    insurance_expiry: string;
+}
 
 /**
- * Admin & Documents page: License/Insurance status with
- * conditional red warnings when expiry < 30 days.
+ * Admin & Documents page: Fetches License/Insurance status from DB
+ * Shows red warnings when expiry < 30 days.
  */
 export default function AdminPage() {
-    // Mock data — replace with API calls in production
-    const licenseExpiry = new Date("2026-08-15");
-    const insuranceExpiry = new Date("2026-05-01");
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+
+    useEffect(() => {
+        fetch(`${config.API_BASE_URL}/api/user/1`)
+            .then((res) => res.json())
+            .then((data) => setProfile(data))
+            .catch((err) => console.error("Error fetching user", err));
+    }, []);
+
     const today = new Date();
 
-    const daysUntilLicense = Math.ceil((licenseExpiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    const daysUntilInsurance = Math.ceil((insuranceExpiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const licenseExpiry = profile ? new Date(profile.license_expiry) : new Date();
+    const insuranceExpiry = profile ? new Date(profile.insurance_expiry) : new Date();
+
+    const daysUntilLicense = profile ? Math.ceil((licenseExpiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+    const daysUntilInsurance = profile ? Math.ceil((insuranceExpiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
     const isLicenseCritical = daysUntilLicense < 30;
     const isInsuranceCritical = daysUntilInsurance < 30;
@@ -31,8 +48,8 @@ export default function AdminPage() {
 
                 {/* License Card */}
                 <div className={`p-6 rounded-xl border transition-all ${isLicenseCritical
-                        ? "border-red-500/50 bg-red-500/5 shadow-[0_0_25px_rgba(239,68,68,0.08)]"
-                        : "border-slate-800 bg-slate-900 shadow-sm"
+                    ? "border-red-500/50 bg-red-500/5 shadow-[0_0_25px_rgba(239,68,68,0.08)]"
+                    : "border-slate-800 bg-slate-900 shadow-sm"
                     }`}>
                     <div className="flex justify-between items-start">
                         <div className="flex items-center">
@@ -68,8 +85,8 @@ export default function AdminPage() {
 
                 {/* Insurance Card */}
                 <div className={`p-6 rounded-xl border transition-all ${isInsuranceCritical
-                        ? "border-red-500/70 bg-red-500/5 shadow-[0_0_25px_rgba(239,68,68,0.1)]"
-                        : "border-slate-800 bg-slate-900 shadow-sm"
+                    ? "border-red-500/70 bg-red-500/5 shadow-[0_0_25px_rgba(239,68,68,0.1)]"
+                    : "border-slate-800 bg-slate-900 shadow-sm"
                     }`}>
                     <div className="flex justify-between items-start">
                         <div className="flex items-center">

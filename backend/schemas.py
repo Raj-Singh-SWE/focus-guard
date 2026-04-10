@@ -1,0 +1,48 @@
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
+
+# ─────────────────────────────────────────────────
+#  User Schemas
+# ─────────────────────────────────────────────────
+class UserBase(BaseModel):
+    name: str
+
+class UserCreate(UserBase):
+    license_expiry: datetime
+    insurance_expiry: datetime
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    license_expiry: Optional[datetime] = None
+    insurance_expiry: Optional[datetime] = None
+
+class UserResponse(UserBase):
+    id: int
+    license_expiry: datetime
+    insurance_expiry: datetime
+
+    class Config:
+        from_attributes = True
+
+# ─────────────────────────────────────────────────
+#  Driving Session Schemas
+# ─────────────────────────────────────────────────
+class DrivingSessionBase(BaseModel):
+    pass
+
+class DrivingSessionCreate(DrivingSessionBase):
+    pass  # start_time is set automatically by DB
+
+class DrivingSessionUpdate(BaseModel):
+    duration: float
+    alerts_triggered: int
+
+class DrivingSessionResponse(DrivingSessionBase):
+    id: int
+    start_time: datetime
+    duration: float
+    alerts_triggered: int
+
+    class Config:
+        from_attributes = True
