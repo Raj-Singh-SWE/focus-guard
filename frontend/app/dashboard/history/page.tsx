@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Calendar, Activity, AlertTriangle } from "lucide-react";
+import { Clock, Calendar, Activity, AlertTriangle, TrendingUp } from "lucide-react";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { config } from "../../lib/config";
 
 interface SessionData {
@@ -36,6 +37,13 @@ export default function HistoryPage() {
     const totalDriveTime = formatDuration(totalSeconds);
     const totalAlerts = sessions.reduce((sum, s) => sum + s.alerts_triggered, 0);
 
+    const chartData = sessions.map((s, index) => ({
+        name: `S-${s.id}`,
+        alerts: s.alerts_triggered,
+        durationMins: Math.round(s.duration / 60),
+        date: formatDate(s.start_time)
+    }));
+
     return (
         <div className="space-y-6">
             <header>
@@ -67,6 +75,58 @@ export default function HistoryPage() {
                     <p className="text-3xl font-bold text-slate-100">{totalAlerts}</p>
                 </div>
             </div>
+
+            {/* Analytics Visualizers */}
+            {sessions.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 pb-4">
+                    {/* Line Chart */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+                        <div className="flex items-center gap-2 mb-6">
+                            <TrendingUp className="w-5 h-5 text-indigo-400" />
+                            <h3 className="text-slate-200 font-semibold">Alert Trend Over Time</h3>
+                        </div>
+                        <div className="h-64 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                                    <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '0.5rem', color: '#f1f5f9' }}
+                                        itemStyle={{ color: '#818cf8' }}
+                                    />
+                                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                                    <Line type="monotone" dataKey="alerts" name="Safety Alerts" stroke="#818cf8" strokeWidth={3} dot={{ r: 4, fill: "#818cf8", strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* Bar Chart */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+                        <div className="flex items-center gap-2 mb-6">
+                            <Clock className="w-5 h-5 text-emerald-400" />
+                            <h3 className="text-slate-200 font-semibold">Drive Duration vs Incidents</h3>
+                        </div>
+                        <div className="h-64 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                                    <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '0.5rem', color: '#f1f5f9' }}
+                                        cursor={{ fill: '#1e293b', opacity: 0.4 }}
+                                    />
+                                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                                    <Bar dataKey="durationMins" name="Duration (min)" fill="#10b981" radius={[4, 4, 0, 0]} barSize={30} />
+                                    <Bar dataKey="alerts" name="Alerts" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={30} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Session table */}
             <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">

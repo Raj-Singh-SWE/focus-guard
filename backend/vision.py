@@ -13,6 +13,7 @@ import cv2
 import base64
 import time
 import math
+import os
 import numpy as np
 from scipy.spatial import distance as dist
 
@@ -109,10 +110,19 @@ class VisionPipeline:
                 self.yolo_model = YOLO("yolov8n.pt")
                 self.yolo_model.to(device)
                 self._yolo_device = device
-                print(f"[VisionPipeline] YOLO loaded on: {device}")
+                print(f"[VisionPipeline] General YOLO loaded on: {device}")
+                
+                # Seatbelt-specific YOLO (Optional Custom Neural Net)
+                if os.path.exists("seatbelt.pt"):
+                    self.seatbelt_model = YOLO("seatbelt.pt")
+                    self.seatbelt_model.to(device)
+                    print(f"[VisionPipeline] Custom Seatbelt YOLO loaded on: {device}")
+                else:
+                    self.seatbelt_model = None
             except Exception as e:
                 print(f"[VisionPipeline] YOLO init failed ({e})")
                 self.yolo_model = None
+                self.seatbelt_model = None
 
         # ── State: Drowsiness ──
         self.ear_counter = 0
@@ -377,6 +387,20 @@ class VisionPipeline:
                     if label == "person" and conf > 0.5:
                         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
+                    # ── Seatbelt Detection Override ──
+                    if getattr(self, "seatbelt_model", None) is not None:
+                        # Direct neural net classification for Seatbelt
+                        sb_res = self.seatbelt_model(frame, verbose=False, device=self._yolo_device)
+                        for r_sb in sb_res:
+                            for sb_box in r_sb.boxes:
+                                if int(sb_box.cls[0]) == 0 and float(sb_box.conf[0]) > 0.6:  # Conf > 60%
+                                    seatbelt_detected_this_frame = True
+                                    sx1, sy1, sx2, sy2 = map(int, sb_box.xyxy[0])
+                                    cv2.rectangle(frame, (sx1, sy1), (sx2, sy2), (0, 255, 0), 2)
+                                    cv2.putText(frame, "Seatbelt Active", (sx1, sy1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                                    break
+                    else:
+                        # Fallback Region-of-Interest heuristic logic
                         box_h = y2 - y1
                         box_w = x2 - x1
 
