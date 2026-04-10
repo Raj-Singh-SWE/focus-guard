@@ -12,7 +12,6 @@ export function Sidebar() {
         { name: "Live Monitoring", href: "/dashboard", icon: Radio },
         { name: "Session History", href: "/dashboard/history", icon: Activity },
         { name: "Admin & Documents", href: "/dashboard/admin", icon: FileText },
-        { name: "Settings", href: "/dashboard/settings", icon: Settings },
     ];
 
     const handleLogout = () => {
@@ -55,10 +54,16 @@ export function Sidebar() {
 
             {/* Footer: Settings + Logout */}
             <div className="p-4 border-t border-slate-200 space-y-1">
-                <button className="flex items-center w-full px-3 py-2 text-slate-500 hover:text-slate-800 font-medium transition-colors rounded-lg hover:bg-slate-100">
+                <Link
+                    href="/dashboard/settings"
+                    className={`flex items-center w-full px-3 py-2 font-medium transition-colors rounded-lg ${pathname === "/dashboard/settings"
+                            ? "bg-indigo-500/10 text-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.05)]"
+                            : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                        }`}
+                >
                     <Settings className="w-5 h-5 mr-3" />
                     Settings
-                </button>
+                </Link>
                 <button
                     onClick={handleLogout}
                     className="flex items-center w-full px-3 py-2 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 font-medium transition-colors rounded-lg"
