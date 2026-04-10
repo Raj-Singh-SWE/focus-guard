@@ -70,7 +70,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center relative overflow-hidden">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center relative overflow-hidden">
             {/* Animated gradient background */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-indigo-900/20 via-transparent to-transparent rounded-full blur-3xl animate-pulse" />
@@ -88,23 +88,23 @@ export default function LoginPage() {
                     <div className="w-20 h-20 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(79,70,229,0.15)]">
                         <ShieldAlert className="w-10 h-10 text-indigo-400" />
                     </div>
-                    <h1 className="text-3xl font-bold text-slate-100 tracking-tight">SafeDrive OS</h1>
-                    <p className="text-slate-500 text-sm mt-2">Driver Safety & Telemetry Platform</p>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">SafeDrive OS</h1>
+                    <p className="text-slate-400 text-sm mt-2">Driver Safety & Telemetry Platform</p>
                 </div>
 
                 {/* Login Card */}
                 <form
                     onSubmit={handleLogin}
-                    className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl shadow-slate-950/50 space-y-6"
+                    className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-2xl p-8 shadow-2xl shadow-indigo-900/5 space-y-6"
                 >
                     <div>
-                        <h2 className="text-xl font-semibold text-slate-200 mb-1">Welcome back</h2>
-                        <p className="text-slate-500 text-sm">Sign in to access your dashboard</p>
+                        <h2 className="text-xl font-semibold text-slate-800 mb-1">Welcome back</h2>
+                        <p className="text-slate-400 text-sm">Sign in to access your dashboard</p>
                     </div>
 
                     {/* Email */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-400 uppercase tracking-wider" htmlFor="email">
+                        <label className="text-sm font-medium text-slate-500 uppercase tracking-wider" htmlFor="email">
                             Email
                         </label>
                         <input
@@ -113,14 +113,14 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="driver@safedrive.io"
-                            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                            className="w-full bg-slate-100/50 border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
                             autoComplete="email"
                         />
                     </div>
 
                     {/* Password */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-400 uppercase tracking-wider" htmlFor="password">
+                        <label className="text-sm font-medium text-slate-500 uppercase tracking-wider" htmlFor="password">
                             Password
                         </label>
                         <div className="relative">
@@ -130,13 +130,13 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 pr-12 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                                className="w-full bg-slate-100/50 border border-slate-300 rounded-xl px-4 py-3 pr-12 text-slate-900 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
                                 autoComplete="current-password"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPw(!showPw)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
                             >
                                 {showPw ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
@@ -145,7 +145,7 @@ export default function LoginPage() {
 
                     {/* Date of Birth */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-400 uppercase tracking-wider" htmlFor="dob">
+                        <label className="text-sm font-medium text-slate-500 uppercase tracking-wider" htmlFor="dob">
                             Date of Birth
                         </label>
                         <input
@@ -154,7 +154,7 @@ export default function LoginPage() {
                             value={dob}
                             onChange={(e) => setDob(e.target.value)}
                             required
-                            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all css-date-icon"
+                            className="w-full bg-slate-100/50 border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all css-date-icon"
                         />
                     </div>
 
@@ -171,7 +171,7 @@ export default function LoginPage() {
                                 onChange={(e) => setLicenseNumber(e.target.value)}
                                 placeholder="DL-12345-ABCD"
                                 required
-                                className="w-full bg-slate-800/50 border border-emerald-500/30 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono"
+                                className="w-full bg-slate-100/50 border border-emerald-500/30 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono"
                             />
                         </div>
                     )}

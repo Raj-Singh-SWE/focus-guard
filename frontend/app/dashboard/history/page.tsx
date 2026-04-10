@@ -47,32 +47,32 @@ export default function HistoryPage() {
     return (
         <div className="space-y-6">
             <header>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-100">Session History</h1>
-                <p className="text-slate-400 mt-1">Review past driving sessions and alert logs.</p>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">Session History</h1>
+                <p className="text-slate-500 mt-1">Review past driving sessions and alert logs.</p>
             </header>
 
             {/* Stats row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <div className="bg-white border border-slate-200 rounded-xl p-5">
                     <div className="flex items-center gap-3 mb-2">
                         <Activity className="w-5 h-5 text-indigo-400" />
-                        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Total Sessions</p>
+                        <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">Total Sessions</p>
                     </div>
-                    <p className="text-3xl font-bold text-slate-100">{sessions.length}</p>
+                    <p className="text-3xl font-bold text-slate-900">{sessions.length}</p>
                 </div>
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <div className="bg-white border border-slate-200 rounded-xl p-5">
                     <div className="flex items-center gap-3 mb-2">
                         <Clock className="w-5 h-5 text-emerald-400" />
-                        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Total Drive Time</p>
+                        <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">Total Drive Time</p>
                     </div>
-                    <p className="text-3xl font-bold text-slate-100 font-mono">{totalDriveTime}</p>
+                    <p className="text-3xl font-bold text-slate-900 font-mono">{totalDriveTime}</p>
                 </div>
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <div className="bg-white border border-slate-200 rounded-xl p-5">
                     <div className="flex items-center gap-3 mb-2">
                         <AlertTriangle className="w-5 h-5 text-amber-400" />
-                        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Total Alerts</p>
+                        <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">Total Alerts</p>
                     </div>
-                    <p className="text-3xl font-bold text-slate-100">{totalAlerts}</p>
+                    <p className="text-3xl font-bold text-slate-900">{totalAlerts}</p>
                 </div>
             </div>
 
@@ -80,10 +80,10 @@ export default function HistoryPage() {
             {sessions.length > 0 && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 pb-4">
                     {/* Line Chart */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
                         <div className="flex items-center gap-2 mb-6">
                             <TrendingUp className="w-5 h-5 text-indigo-400" />
-                            <h3 className="text-slate-200 font-semibold">Alert Trend Over Time</h3>
+                            <h3 className="text-slate-800 font-semibold">Alert Trend Over Time</h3>
                         </div>
                         <div className="h-64 w-full">
                             <ResponsiveContainer width="100%" height="100%">
@@ -103,10 +103,10 @@ export default function HistoryPage() {
                     </div>
 
                     {/* Bar Chart */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
                         <div className="flex items-center gap-2 mb-6">
                             <Clock className="w-5 h-5 text-emerald-400" />
-                            <h3 className="text-slate-200 font-semibold">Drive Duration vs Incidents</h3>
+                            <h3 className="text-slate-800 font-semibold">Drive Duration vs Incidents</h3>
                         </div>
                         <div className="h-64 w-full">
                             <ResponsiveContainer width="100%" height="100%">
@@ -129,33 +129,33 @@ export default function HistoryPage() {
             )}
 
             {/* Session table */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-slate-800 text-left">
-                            <th className="px-6 py-4 text-xs text-slate-500 uppercase tracking-wider font-medium">#</th>
-                            <th className="px-6 py-4 text-xs text-slate-500 uppercase tracking-wider font-medium">
+                        <tr className="border-b border-slate-200 text-left">
+                            <th className="px-6 py-4 text-xs text-slate-400 uppercase tracking-wider font-medium">#</th>
+                            <th className="px-6 py-4 text-xs text-slate-400 uppercase tracking-wider font-medium">
                                 <Calendar className="w-3 h-3 inline mr-1" />Date
                             </th>
-                            <th className="px-6 py-4 text-xs text-slate-500 uppercase tracking-wider font-medium">
+                            <th className="px-6 py-4 text-xs text-slate-400 uppercase tracking-wider font-medium">
                                 <Clock className="w-3 h-3 inline mr-1" />Duration
                             </th>
-                            <th className="px-6 py-4 text-xs text-slate-500 uppercase tracking-wider font-medium">Alerts</th>
-                            <th className="px-6 py-4 text-xs text-slate-500 uppercase tracking-wider font-medium">Status</th>
+                            <th className="px-6 py-4 text-xs text-slate-400 uppercase tracking-wider font-medium">Alerts</th>
+                            <th className="px-6 py-4 text-xs text-slate-400 uppercase tracking-wider font-medium">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {sessions.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="px-6 py-8 text-center text-slate-500 text-sm">
+                                <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
                                     No driving sessions recorded yet. Start a drive to log history!
                                 </td>
                             </tr>
                         ) : sessions.map((session) => (
-                            <tr key={session.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                                <td className="px-6 py-4 text-slate-400 font-mono text-sm">{session.id}</td>
-                                <td className="px-6 py-4 text-slate-200 text-sm">{formatDate(session.start_time)}</td>
-                                <td className="px-6 py-4 text-slate-200 text-sm font-mono">{formatDuration(session.duration)}</td>
+                            <tr key={session.id} className="border-b border-slate-200/50 hover:bg-slate-100/30 transition-colors">
+                                <td className="px-6 py-4 text-slate-500 font-mono text-sm">{session.id}</td>
+                                <td className="px-6 py-4 text-slate-800 text-sm">{formatDate(session.start_time)}</td>
+                                <td className="px-6 py-4 text-slate-800 text-sm font-mono">{formatDuration(session.duration)}</td>
                                 <td className="px-6 py-4">
                                     <span className={`text-sm font-medium ${session.alerts_triggered > 5 ? "text-red-400" : session.alerts_triggered > 0 ? "text-amber-400" : "text-emerald-400"
                                         }`}>

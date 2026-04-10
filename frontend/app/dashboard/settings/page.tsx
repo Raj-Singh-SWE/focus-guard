@@ -83,14 +83,14 @@ export default function SettingsPage() {
     };
 
     if (isLoading) {
-        return <div className="p-8 text-slate-400">Loading profile data...</div>;
+        return <div className="p-8 text-slate-500">Loading profile data...</div>;
     }
 
     return (
         <div className="max-w-3xl space-y-8">
             <header>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-100">Settings & Profile</h1>
-                <p className="text-slate-400 mt-1">Manage your driver demographics and registered documents.</p>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">Settings & Profile</h1>
+                <p className="text-slate-500 mt-1">Manage your driver demographics and registered documents.</p>
             </header>
 
             {message && (
@@ -99,14 +99,14 @@ export default function SettingsPage() {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm p-6 space-y-6">
 
                 {/* Personal Information */}
                 <div>
-                    <h3 className="text-lg font-semibold text-slate-200 border-b border-slate-800 pb-2 mb-4">Personal Information</h3>
+                    <h3 className="text-lg font-semibold text-slate-800 border-b border-slate-200 pb-2 mb-4">Personal Information</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                            <label className="text-sm font-medium text-slate-500 flex items-center gap-2">
                                 <User className="w-4 h-4" /> Full Name
                             </label>
                             <input
@@ -115,11 +115,11 @@ export default function SettingsPage() {
                                 value={profile.name}
                                 onChange={handleChange}
                                 required
-                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 outline-none focus:border-indigo-500 transition-colors"
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                            <label className="text-sm font-medium text-slate-500 flex items-center gap-2">
                                 <Calendar className="w-4 h-4" /> Date of Birth (Age Verification)
                             </label>
                             <input
@@ -128,7 +128,7 @@ export default function SettingsPage() {
                                 value={profile.dob}
                                 onChange={handleChange}
                                 required
-                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors css-date-icon"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 outline-none focus:border-indigo-500 transition-colors css-date-icon"
                             />
                         </div>
                     </div>
@@ -137,10 +137,10 @@ export default function SettingsPage() {
                 {/* Document Information (Only visible if 18+) */}
                 {currentAge >= 18 ? (
                     <div>
-                        <h3 className="text-lg font-semibold text-slate-200 border-b border-slate-800 pb-2 mb-4">Driver Documents</h3>
+                        <h3 className="text-lg font-semibold text-slate-800 border-b border-slate-200 pb-2 mb-4">Driver Documents</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="space-y-2 col-span-1 sm:col-span-2">
-                                <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                                <label className="text-sm font-medium text-slate-500 flex items-center gap-2">
                                     <FileText className="w-4 h-4" /> Driver's License Number
                                 </label>
                                 <input
@@ -150,11 +150,11 @@ export default function SettingsPage() {
                                     onChange={handleChange}
                                     placeholder="e.g. DL-12345-ABCD"
                                     required
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors font-mono"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 outline-none focus:border-indigo-500 transition-colors font-mono"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                                <label className="text-sm font-medium text-slate-500 flex items-center gap-2">
                                     <Calendar className="w-4 h-4 text-emerald-400" /> License Expiry
                                 </label>
                                 <input
@@ -163,11 +163,11 @@ export default function SettingsPage() {
                                     value={profile.license_expiry}
                                     onChange={handleChange}
                                     required
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 outline-none focus:border-indigo-500 transition-colors"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                                <label className="text-sm font-medium text-slate-500 flex items-center gap-2">
                                     <ShieldCheck className="w-4 h-4 text-sky-400" /> Insurance Expiry
                                 </label>
                                 <input
@@ -176,7 +176,7 @@ export default function SettingsPage() {
                                     value={profile.insurance_expiry}
                                     onChange={handleChange}
                                     required
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 outline-none focus:border-indigo-500 transition-colors"
                                 />
                             </div>
                         </div>

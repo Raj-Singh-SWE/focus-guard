@@ -145,16 +145,16 @@ export function AlertFeed() {
     };
 
     return (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm h-full flex flex-col">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm h-full flex flex-col">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-slate-200 tracking-wide">
+                <h2 className="text-xl font-semibold text-slate-800 tracking-wide">
                     Alert Feed
                 </h2>
                 <div className="flex items-center gap-2">
                     {alerts.length > 0 && (
                         <button
                             onClick={() => setAlerts([])}
-                            className="text-[10px] uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+                            className="text-[10px] uppercase tracking-wider text-slate-400 hover:text-slate-700 transition-colors"
                         >
                             Clear
                         </button>
@@ -162,7 +162,7 @@ export function AlertFeed() {
                     <span
                         className={`text-xs font-mono px-2 py-0.5 rounded-full border ${connected
                             ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
-                            : "border-slate-700 text-slate-500 bg-slate-800"
+                            : "border-slate-300 text-slate-400 bg-slate-100"
                             }`}
                     >
                         {connected ? "LIVE" : "OFFLINE"}
@@ -172,7 +172,7 @@ export function AlertFeed() {
 
             <div className="flex-1 overflow-y-auto space-y-2 max-h-[500px] pr-1">
                 {alerts.length === 0 ? (
-                    <div className="p-3 bg-slate-800/50 rounded-lg text-sm text-slate-500 border border-slate-800 text-center">
+                    <div className="p-3 bg-slate-100/50 rounded-lg text-sm text-slate-400 border border-slate-200 text-center">
                         No alerts yet. Start a drive session to begin monitoring.
                     </div>
                 ) : (

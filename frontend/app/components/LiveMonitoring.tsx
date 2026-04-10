@@ -441,7 +441,7 @@ export function LiveMonitoring() {
             <div
                 className={`relative bg-black rounded-xl overflow-hidden shadow-lg transition-all duration-300 ${alarmActive
                     ? "border-4 border-red-500 animate-pulse shadow-[0_0_60px_rgba(220,38,38,0.5)]"
-                    : "border border-slate-800"
+                    : "border border-slate-200"
                     }`}
             >
                 <canvas
@@ -457,8 +457,8 @@ export function LiveMonitoring() {
                                 <span className="text-4xl">🚗</span>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-100 tracking-tight">SafeDrive OS Ready</h2>
-                                <p className="text-slate-500 text-sm mt-2 max-w-xs mx-auto">
+                                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">SafeDrive OS Ready</h2>
+                                <p className="text-slate-400 text-sm mt-2 max-w-xs mx-auto">
                                     Press the button below to unlock audio alerts, start the session timer, and begin live AI monitoring.
                                 </p>
                             </div>
@@ -475,7 +475,7 @@ export function LiveMonitoring() {
                 {sessionActive && !isConnected && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-10">
                         <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                        <span className="text-slate-400 font-mono text-sm tracking-widest">
+                        <span className="text-slate-500 font-mono text-sm tracking-widest">
                             {connectionState === "reconnecting" ? "RECONNECTING..." : "CONNECTING TO BACKEND..."}
                         </span>
                     </div>
@@ -488,7 +488,7 @@ export function LiveMonitoring() {
                 )}
 
                 {sessionActive && (
-                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur text-slate-300 text-xs font-mono px-3 py-1 rounded-full border border-slate-700 z-20">
+                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur text-slate-700 text-xs font-mono px-3 py-1 rounded-full border border-slate-300 z-20">
                         ⏱ {sessionElapsed}
                     </div>
                 )}
@@ -518,46 +518,46 @@ export function LiveMonitoring() {
             </audio>
 
             {/* STATUS BAR */}
-            <div className="flex flex-wrap justify-between items-center bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm gap-4">
+            <div className="flex flex-wrap justify-between items-center bg-white border border-slate-200 p-5 rounded-xl shadow-sm gap-4">
                 <div className="flex items-center gap-6 flex-wrap">
                     <div>
-                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Pipeline</h3>
-                        <p className={`font-medium flex items-center ${isConnected ? "text-emerald-400" : "text-slate-400"}`}>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Pipeline</h3>
+                        <p className={`font-medium flex items-center ${isConnected ? "text-emerald-400" : "text-slate-500"}`}>
                             <span className={`w-2.5 h-2.5 rounded-full mr-2 ${isConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-600"}`}></span>
                             {connectionState === "streaming" ? "Streaming" : connectionState === "reconnecting" ? "Reconnecting..." : connectionState === "connecting" ? "Connecting..." : "Idle"}
                         </p>
                     </div>
 
                     <div>
-                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Drowsiness</h3>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Drowsiness</h3>
                         <p className={`font-medium ${isDrowsy ? "text-red-400 animate-pulse" : "text-emerald-400"}`}>
                             {isDrowsy ? "⚠ Alert" : "✓ Normal"}
                         </p>
                     </div>
 
                     <div>
-                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Yawning</h3>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Yawning</h3>
                         <p className={`font-medium ${isYawning ? "text-orange-400 animate-pulse" : "text-emerald-400"}`}>
                             {isYawning ? "⚠ Yawning" : "✓ Normal"}
                         </p>
                     </div>
 
                     <div>
-                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Seatbelt</h3>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Seatbelt</h3>
                         <p className={`font-medium ${seatbeltOn ? "text-emerald-400" : "text-orange-400 animate-pulse"}`}>
                             {seatbeltOn ? "✓ Detected" : "⚠ Missing"}
                         </p>
                     </div>
 
                     <div>
-                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Distraction</h3>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Distraction</h3>
                         <p className={`font-medium ${isDistracted ? "text-red-400 animate-pulse" : "text-emerald-400"}`}>
                             {isDistracted ? "⚠ Phone" : "✓ None"}
                         </p>
                     </div>
 
                     <div>
-                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Head Pose</h3>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Head Pose</h3>
                         <p className={`font-medium ${isHeadDown ? "text-red-400 animate-pulse" : "text-emerald-400"}`}>
                             {isHeadDown ? "⚠ Down" : "✓ Forward"}
                         </p>
