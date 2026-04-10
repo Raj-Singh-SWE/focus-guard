@@ -3,14 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, Eye, EyeOff, Loader2 } from "lucide-react";
+import { config } from "../lib/config";
 
 export default function LoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [dob, setDob] = useState("");
+    const [licenseNumber, setLicenseNumber] = useState("");
     const [showPw, setShowPw] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    const calculateAge = (dobString: string) => {
+        if (!dobString) return 0;
+        const dobDate = new Date(dobString);
+        const ageDifMs = Date.now() - dobDate.getTime();
+        const ageDate = new Date(ageDifMs);
+        return Math.abs(ageDate.getUTCFullYear() - 1970);
+    };
+
+    const currentAge = calculateAge(dob);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -22,6 +35,23 @@ export default function LoginPage() {
         }
 
         setLoading(true);
+
+        try {
+            // First, update the SQLite profile using the onboarding data
+            await fetch(`${config.API_BASE_URL}/api/user/1`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: email.split("@")[0],
+                    dob: dob ? new Date(dob).toISOString() : null,
+                    license_number: licenseNumber || null,
+                    license_expiry: null,
+                    insurance_expiry: null,
+                })
+            });
+        } catch (err) {
+            console.error("Failed to sync onboarding data with DB.");
+        }
 
         // Mock auth — simulate a 600ms server round-trip
         await new Promise((r) => setTimeout(r, 600));
@@ -112,6 +142,45 @@ export default function LoginPage() {
                             </button>
                         </div>
                     </div>
+
+                    {/* Date of Birth */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-400 uppercase tracking-wider" htmlFor="dob">
+                            Date of Birth
+                        </label>
+                        <input
+                            id="dob"
+                            type="date"
+                            value={dob}
+                            onChange={(e) => setDob(e.target.value)}
+                            required
+                            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all css-date-icon"
+                        />
+                    </div>
+
+                    {/* Dynamic License Field */}
+                    {dob && currentAge >= 18 && (
+                        <div className="space-y-2 animate-in fade-in slide-in-from-top-4 duration-300">
+                            <label className="text-sm font-medium text-emerald-400 uppercase tracking-wider flex items-center gap-2" htmlFor="licenseNumber">
+                                <ShieldAlert className="w-4 h-4" /> Driver's License No.
+                            </label>
+                            <input
+                                id="licenseNumber"
+                                type="text"
+                                value={licenseNumber}
+                                onChange={(e) => setLicenseNumber(e.target.value)}
+                                placeholder="DL-12345-ABCD"
+                                required
+                                className="w-full bg-slate-800/50 border border-emerald-500/30 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono"
+                            />
+                        </div>
+                    )}
+
+                    {dob && currentAge < 18 && (
+                        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-xl">
+                            Registration Note: Driver must be 18+ to register a License.
+                        </div>
+                    )}
 
                     {/* Error */}
                     {error && (
