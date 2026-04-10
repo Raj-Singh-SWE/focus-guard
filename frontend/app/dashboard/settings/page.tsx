@@ -20,6 +20,16 @@ export default function SettingsPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState("");
 
+    const calculateAge = (dobString: string) => {
+        if (!dobString) return 0;
+        const dob = new Date(dobString);
+        const ageDifMs = Date.now() - dob.getTime();
+        const ageDate = new Date(ageDifMs);
+        return Math.abs(ageDate.getUTCFullYear() - 1970);
+    };
+
+    const currentAge = calculateAge(profile.dob);
+
     useEffect(() => {
         fetch(`${config.API_BASE_URL}/api/user/1`)
             .then(res => res.json())
@@ -124,52 +134,58 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                {/* Document Information */}
-                <div>
-                    <h3 className="text-lg font-semibold text-slate-200 border-b border-slate-800 pb-2 mb-4">Driver Documents</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div className="space-y-2 col-span-1 sm:col-span-2">
-                            <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                                <FileText className="w-4 h-4" /> Driver's License Number
-                            </label>
-                            <input
-                                type="text"
-                                name="license_number"
-                                value={profile.license_number}
-                                onChange={handleChange}
-                                placeholder="e.g. DL-12345-ABCD"
-                                required
-                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors font-mono"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-emerald-400" /> License Expiry
-                            </label>
-                            <input
-                                type="date"
-                                name="license_expiry"
-                                value={profile.license_expiry}
-                                onChange={handleChange}
-                                required
-                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                                <ShieldCheck className="w-4 h-4 text-sky-400" /> Insurance Expiry
-                            </label>
-                            <input
-                                type="date"
-                                name="insurance_expiry"
-                                value={profile.insurance_expiry}
-                                onChange={handleChange}
-                                required
-                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors"
-                            />
+                {/* Document Information (Only visible if 18+) */}
+                {currentAge >= 18 ? (
+                    <div>
+                        <h3 className="text-lg font-semibold text-slate-200 border-b border-slate-800 pb-2 mb-4">Driver Documents</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="space-y-2 col-span-1 sm:col-span-2">
+                                <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                                    <FileText className="w-4 h-4" /> Driver's License Number
+                                </label>
+                                <input
+                                    type="text"
+                                    name="license_number"
+                                    value={profile.license_number}
+                                    onChange={handleChange}
+                                    placeholder="e.g. DL-12345-ABCD"
+                                    required
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors font-mono"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-emerald-400" /> License Expiry
+                                </label>
+                                <input
+                                    type="date"
+                                    name="license_expiry"
+                                    value={profile.license_expiry}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                                    <ShieldCheck className="w-4 h-4 text-sky-400" /> Insurance Expiry
+                                </label>
+                                <input
+                                    type="date"
+                                    name="insurance_expiry"
+                                    value={profile.insurance_expiry}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl text-center">
+                        <p className="text-amber-400 text-sm font-medium">You must be 18 or older to register driver documents.</p>
+                    </div>
+                )}
 
                 <div className="pt-4 flex justify-end">
                     <button
