@@ -2,7 +2,7 @@ import "./globals.css";
 import React from "react";
 
 export const metadata = {
-    title: "SafeDrive OS",
+    title: "Focus Drive",
     description: "Driver Safety and Telemetry Dashboard — CUDA-Accelerated Vision Pipeline",
 };
 

@@ -26,7 +26,7 @@ export function Sidebar() {
             {/* Brand */}
             <div className="h-16 flex items-center px-6 border-b border-slate-200">
                 <ShieldAlert className="w-6 h-6 text-indigo-500 mr-2" />
-                <span className="font-bold text-lg tracking-wide text-slate-900">SafeDrive OS</span>
+                <span className="font-bold text-lg tracking-wide text-slate-900">Focus Drive</span>
             </div>
 
             {/* Navigation */}

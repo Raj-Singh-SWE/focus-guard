@@ -457,7 +457,7 @@ export function LiveMonitoring() {
                                 <span className="text-4xl">🚗</span>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">SafeDrive OS Ready</h2>
+                                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Focus Drive Ready</h2>
                                 <p className="text-slate-400 text-sm mt-2 max-w-xs mx-auto">
                                     Press the button below to unlock audio alerts, start the session timer, and begin live AI monitoring.
                                 </p>

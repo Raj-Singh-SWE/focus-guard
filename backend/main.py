@@ -1,5 +1,5 @@
 """
-SafeDrive OS - FastAPI Backend (Hardened)
+Focus Drive OS - FastAPI Backend (Hardened)
 ==========================================
 Production-grade WebSocket server with:
   - ConnectionManager for lifecycle management
@@ -108,7 +108,7 @@ async def lifespan(app: FastAPI):
     
     global _server_start_time
     _server_start_time = time.time()
-    print("[Server] SafeDrive OS backend starting up...")
+    print("[Server] Focus Drive OS backend starting up...")
     Base.metadata.create_all(bind=engine)
     yield
     # Cleanup on shutdown
@@ -118,10 +118,10 @@ async def lifespan(app: FastAPI):
             vision_pipeline.release()
             vision_pipeline = None
     executor.shutdown(wait=False)
-    print("[Server] SafeDrive OS backend shut down.")
+    print("[Server] Focus Drive OS backend shut down.")
 
 
-app = FastAPI(title="SafeDrive OS Backend", lifespan=lifespan)
+app = FastAPI(title="Focus Drive OS Backend", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -186,7 +186,7 @@ def health_check():
         pass
     return {
         "status": "ok",
-        "service": "SafeDrive OS API",
+        "service": "Focus Drive OS API",
         "uptime_seconds": uptime,
         "cuda_available": cuda,
         "gpu": gpu_info,

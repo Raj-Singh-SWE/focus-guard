@@ -88,7 +88,7 @@ export default function LoginPage() {
                     <div className="w-20 h-20 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(79,70,229,0.15)]">
                         <ShieldAlert className="w-10 h-10 text-indigo-400" />
                     </div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">SafeDrive OS</h1>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Focus Drive</h1>
                     <p className="text-slate-400 text-sm mt-2">Driver Safety & Telemetry Platform</p>
                 </div>
 
@@ -112,7 +112,7 @@ export default function LoginPage() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="driver@safedrive.io"
+                            placeholder="driver@focusdrive.io"
                             className="w-full bg-slate-100/50 border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
                             autoComplete="email"
                         />
@@ -213,7 +213,7 @@ export default function LoginPage() {
 
                 {/* Footer */}
                 <p className="text-center text-slate-700 text-xs mt-8">
-                    SafeDrive OS v1.0 · CUDA-Accelerated Vision Pipeline
+                    Focus Drive v1.0 · CUDA-Accelerated Vision Pipeline
                 </p>
             </div>
         </div>

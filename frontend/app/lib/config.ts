@@ -1,5 +1,5 @@
 /**
- * SafeDrive OS - Environment Configuration
+ * Focus Drive - Environment Configuration
  * ==========================================
  * Centralizes all backend connection URLs.
  * Uses NEXT_PUBLIC_ env vars so they're available client-side.

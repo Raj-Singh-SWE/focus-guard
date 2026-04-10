@@ -1,5 +1,5 @@
 """
-SafeDrive OS - Alarm Audio Generator
+Focus Drive OS - Alarm Audio Generator
 =====================================
 Generates a high-urgency, modern vehicle warning beep.
 Output: alarm.mp3 → frontend/public/alarm.mp3

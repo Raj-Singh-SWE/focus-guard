@@ -1,5 +1,5 @@
 """
-SafeDrive OS - Computer Vision Pipeline (Hardened)
+Focus Drive OS - Computer Vision Pipeline (Hardened)
 ====================================================
 Feature-rich hybrid ML approach:
   1. MediaPipe FaceLandmarker (CPU) → EAR drowsiness + MAR yawning + head pose
