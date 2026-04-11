@@ -151,12 +151,13 @@ def update_user_profile(email: str, user_update: schemas.UserUpdate, db: Session
     return updated_user
 
 @app.get("/api/sessions", response_model=list[schemas.DrivingSessionResponse])
-def get_sessions(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
-    return crud.get_driving_sessions(db, skip=skip, limit=limit)
+def get_sessions(skip: int = 0, limit: int = 50, email: str | None = None, db: Session = Depends(get_db)):
+    return crud.get_driving_sessions(db, skip=skip, limit=limit, user_email=email)
 
 @app.post("/api/sessions", response_model=schemas.DrivingSessionResponse)
-def start_session(db: Session = Depends(get_db)):
-    return crud.create_driving_session(db)
+def start_session(session_in: schemas.DrivingSessionCreate = None, db: Session = Depends(get_db)):
+    user_email = session_in.user_email if session_in else None
+    return crud.create_driving_session(db, user_email=user_email)
 
 @app.put("/api/sessions/{session_id}", response_model=schemas.DrivingSessionResponse)
 def update_session(session_id: int, session: schemas.DrivingSessionUpdate, db: Session = Depends(get_db)):

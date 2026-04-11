@@ -14,7 +14,6 @@ interface AlertPayload {
 // ─────────────────────────────────────────────────
 //  Constants
 // ─────────────────────────────────────────────────
-const WS_VIDEO_URL = config.WS_VIDEO_URL;
 const WS_ALERTS_URL = config.WS_ALERTS_URL;
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 10000;
@@ -23,20 +22,20 @@ const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 
 export function LiveMonitoring() {
     // ── Refs ──
-    const videoCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const localVideoRef = useRef<HTMLVideoElement | null>(null);
+    const mediaStreamRef = useRef<MediaStream | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const audioCtxRef = useRef<AudioContext | null>(null);
-    const videoWsRef = useRef<WebSocket | null>(null);
     const alertWsRef = useRef<WebSocket | null>(null);
     const keepaliveRef = useRef<NodeJS.Timeout | null>(null);
 
     // Exponential backoff state
-    const videoReconnectDelay = useRef(INITIAL_RECONNECT_MS);
     const alertReconnectDelay = useRef(INITIAL_RECONNECT_MS);
 
     // ── Connection & Session State ──
     const [sessionActive, setSessionActive] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
+    const [cameraReady, setCameraReady] = useState(false);
     const [sessionStart, setSessionStart] = useState<number | null>(null);
     const [sessionElapsed, setSessionElapsed] = useState("00:00:00");
     const [connectionState, setConnectionState] = useState<"idle" | "connecting" | "streaming" | "reconnecting">("idle");
@@ -63,11 +62,6 @@ export function LiveMonitoring() {
     // ── Age Enforcement ──
     const [userAge, setUserAge] = useState<number | null>(null);
     const [ageBlocker, setAgeBlocker] = useState(false);
-
-    // ── FPS Tracking ──
-    const [fps, setFps] = useState(0);
-    const frameCountRef = useRef(0);
-    const lastFpsTimeRef = useRef(Date.now());
 
     // ─────────────────────────────────────────────────
     //  SESSION TIMER
@@ -158,6 +152,13 @@ export function LiveMonitoring() {
             }).catch(e => console.error("Failed to end SQL session:", e));
         }
 
+        // Stop the local camera
+        if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach(t => t.stop());
+            mediaStreamRef.current = null;
+        }
+        setCameraReady(false);
+
         setSessionActive(false);
         setSessionId(null);
         sessionIdRef.current = null;
@@ -173,9 +174,7 @@ export function LiveMonitoring() {
         setShowBreakReminder(false);
 
         if (keepaliveRef.current) clearInterval(keepaliveRef.current);
-        videoWsRef.current?.close();
         alertWsRef.current?.close();
-        videoWsRef.current = null;
         alertWsRef.current = null;
     }, [sessionStart]);
 
@@ -185,6 +184,12 @@ export function LiveMonitoring() {
             audio.removeEventListener("ended", () => setAlarmActive(false));
             audio.pause();
         }
+        return () => {
+            // Cleanup camera on unmount
+            if (mediaStreamRef.current) {
+                mediaStreamRef.current.getTracks().forEach(t => t.stop());
+            }
+        };
     }, [endDriveSession]);
 
     // Fetch user age on mount
@@ -204,65 +209,28 @@ export function LiveMonitoring() {
     }, []);
 
     // ─────────────────────────────────────────────────
-    //  WEBSOCKET: Video Feed (with exponential backoff)
+    //  LOCAL CAMERA: getUserMedia
     // ─────────────────────────────────────────────────
-    const connectVideoFeed = useCallback(() => {
-        if (videoWsRef.current) videoWsRef.current.close();
+    const startLocalCamera = useCallback(async () => {
         setConnectionState("connecting");
-
-        const ws = new WebSocket(WS_VIDEO_URL);
-
-        ws.onopen = () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false,
+            });
+            mediaStreamRef.current = stream;
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = stream;
+            }
+            setCameraReady(true);
             setIsConnected(true);
             setConnectionState("streaming");
-            videoReconnectDelay.current = INITIAL_RECONNECT_MS; // Reset backoff
-        };
-
-        ws.onmessage = (event) => {
-            try {
-                const payload = JSON.parse(event.data);
-
-                // Ignore heartbeat messages
-                if (payload.type === "heartbeat") return;
-
-                if (payload.type === "frame" && payload.data) {
-                    const canvas = videoCanvasRef.current;
-                    if (!canvas) return;
-                    const ctx = canvas.getContext("2d");
-                    if (!ctx) return;
-
-                    const img = new Image();
-                    img.onload = () => {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        ctx.drawImage(img, 0, 0);
-                    };
-                    img.src = `data:image/jpeg;base64,${payload.data}`;
-
-                    frameCountRef.current += 1;
-                    const now = Date.now();
-                    if (now - lastFpsTimeRef.current >= 1000) {
-                        setFps(frameCountRef.current);
-                        frameCountRef.current = 0;
-                        lastFpsTimeRef.current = now;
-                    }
-                }
-            } catch {
-                /* ignore */
-            }
-        };
-
-        ws.onclose = () => {
-            setIsConnected(false);
+        } catch (err) {
+            console.error("Camera access denied or unavailable:", err);
             setConnectionState("reconnecting");
-            // Exponential backoff: 1s → 2s → 4s → 8s → cap at 10s
-            const delay = videoReconnectDelay.current;
-            videoReconnectDelay.current = Math.min(delay * 2, MAX_RECONNECT_MS);
-            setTimeout(connectVideoFeed, delay);
-        };
-
-        ws.onerror = () => setIsConnected(false);
-        videoWsRef.current = ws;
+            // Retry after a delay
+            setTimeout(startLocalCamera, 3000);
+        }
     }, []);
 
     // ─────────────────────────────────────────────────
@@ -355,9 +323,14 @@ export function LiveMonitoring() {
             }).catch(() => { });
         }
 
-        // Track session in DB
+        // Track session in DB with user's email
+        const userEmail = JSON.parse(localStorage.getItem("safedrive_user") || "{}").email || null;
         try {
-            const res = await fetch(`${config.API_BASE_URL}/api/sessions`, { method: "POST" });
+            const res = await fetch(`${config.API_BASE_URL}/api/sessions`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_email: userEmail }),
+            });
             const data = await res.json();
             setSessionId(data.id);
             sessionIdRef.current = data.id;
@@ -371,15 +344,17 @@ export function LiveMonitoring() {
         setShowBreakReminder(false);
         setSessionActive(true);
 
-        connectVideoFeed();
+        startLocalCamera();
         connectAlerts();
-    }, [connectVideoFeed, connectAlerts, userAge]);
+    }, [startLocalCamera, connectAlerts, userAge]);
 
     useEffect(() => {
         return () => {
             if (keepaliveRef.current) clearInterval(keepaliveRef.current);
-            videoWsRef.current?.close();
             alertWsRef.current?.close();
+            if (mediaStreamRef.current) {
+                mediaStreamRef.current.getTracks().forEach(t => t.stop());
+            }
         };
     }, []);
 
@@ -445,10 +420,13 @@ export function LiveMonitoring() {
                     : "border border-slate-200"
                     }`}
             >
-                <canvas
-                    ref={videoCanvasRef}
-                    className="w-full h-auto block"
-                    style={{ minHeight: "360px" }}
+                <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-auto block mirror-video"
+                    style={{ minHeight: "360px", transform: "scaleX(-1)" }}
                 />
 
                 {!sessionActive && (
@@ -473,18 +451,19 @@ export function LiveMonitoring() {
                     </div>
                 )}
 
-                {sessionActive && !isConnected && (
+                {sessionActive && !cameraReady && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-10">
                         <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                         <span className="text-slate-500 font-mono text-sm tracking-widest">
-                            {connectionState === "reconnecting" ? "RECONNECTING..." : "CONNECTING TO BACKEND..."}
+                            {connectionState === "reconnecting" ? "RETRYING CAMERA..." : "STARTING CAMERA..."}
                         </span>
                     </div>
                 )}
 
-                {isConnected && (
-                    <div className="absolute top-3 right-3 bg-black/60 backdrop-blur text-emerald-400 text-xs font-mono px-3 py-1 rounded-full border border-emerald-500/30 z-20">
-                        {fps} FPS
+                {cameraReady && (
+                    <div className="absolute top-3 right-3 bg-black/60 backdrop-blur text-emerald-400 text-xs font-mono px-3 py-1 rounded-full border border-emerald-500/30 z-20 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        LIVE
                     </div>
                 )}
 

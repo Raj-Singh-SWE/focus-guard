@@ -22,13 +22,29 @@ class UserUpdate(BaseModel):
     license_number: Optional[str] = None
     license_expiry: Optional[datetime] = None
     insurance_expiry: Optional[datetime] = None
+    emergency_contact: Optional[str] = None
 
 class UserResponse(UserBase):
     id: int
-    dob: datetime
-    license_number: str
-    license_expiry: datetime
-    insurance_expiry: datetime
+    dob: Optional[datetime] = None
+    license_number: Optional[str] = None
+    license_expiry: Optional[datetime] = None
+    insurance_expiry: Optional[datetime] = None
+    emergency_contact: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+# ─────────────────────────────────────────────────
+#  Emergency Schemas
+# ─────────────────────────────────────────────────
+class EmergencyResponse(BaseModel):
+    id: int
+    user_email: str
+    timestamp: datetime
+    contact_called: str
+    police_notified: int
+    status: str
 
     class Config:
         from_attributes = True
@@ -40,7 +56,7 @@ class DrivingSessionBase(BaseModel):
     pass
 
 class DrivingSessionCreate(DrivingSessionBase):
-    pass  # start_time is set automatically by DB
+    user_email: Optional[str] = None
 
 class DrivingSessionUpdate(BaseModel):
     duration: float
@@ -48,6 +64,7 @@ class DrivingSessionUpdate(BaseModel):
 
 class DrivingSessionResponse(DrivingSessionBase):
     id: int
+    user_email: Optional[str] = None
     start_time: datetime
     duration: float
     alerts_triggered: int

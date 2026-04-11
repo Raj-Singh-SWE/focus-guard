@@ -29,8 +29,8 @@ def create_or_update_user(db: Session, email: str, user_update: schemas.UserUpda
 # ─────────────────────────────────────────────────
 #  Driving Session CRUD
 # ─────────────────────────────────────────────────
-def create_driving_session(db: Session):
-    db_session = models.DrivingSession()
+def create_driving_session(db: Session, user_email: str | None = None):
+    db_session = models.DrivingSession(user_email=user_email)
     db.add(db_session)
     db.commit()
     db.refresh(db_session)
@@ -48,6 +48,9 @@ def update_driving_session(db: Session, session_id: int, session_update: schemas
     db.refresh(db_session)
     return db_session
 
-def get_driving_sessions(db: Session, skip: int = 0, limit: int = 50):
-    # Return newest first
-    return db.query(models.DrivingSession).order_by(models.DrivingSession.id.desc()).offset(skip).limit(limit).all()
+def get_driving_sessions(db: Session, skip: int = 0, limit: int = 50, user_email: str | None = None):
+    # Return newest first, optionally filtered by user
+    query = db.query(models.DrivingSession)
+    if user_email:
+        query = query.filter(models.DrivingSession.user_email == user_email)
+    return query.order_by(models.DrivingSession.id.desc()).offset(skip).limit(limit).all()

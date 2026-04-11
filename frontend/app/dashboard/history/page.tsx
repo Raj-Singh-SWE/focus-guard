@@ -16,7 +16,9 @@ export default function HistoryPage() {
     const [sessions, setSessions] = useState<SessionData[]>([]);
 
     useEffect(() => {
-        fetch(`${config.API_BASE_URL}/api/sessions`)
+        const userEmail = JSON.parse(localStorage.getItem("safedrive_user") || "{}").email || "";
+        const queryParam = userEmail ? `?email=${encodeURIComponent(userEmail)}` : "";
+        fetch(`${config.API_BASE_URL}/api/sessions${queryParam}`)
             .then(res => res.json())
             .then(data => setSessions(data))
             .catch(err => console.error("History fetch error:", err));
