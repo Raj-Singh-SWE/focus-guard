@@ -14,6 +14,7 @@ interface AlertPayload {
 // ─────────────────────────────────────────────────
 //  Constants
 // ─────────────────────────────────────────────────
+const WS_VIDEO_URL = config.WS_VIDEO_URL;
 const WS_ALERTS_URL = config.WS_ALERTS_URL;
 const INITIAL_RECONNECT_MS = 1000;
 const MAX_RECONNECT_MS = 10000;
@@ -26,10 +27,12 @@ export function LiveMonitoring() {
     const mediaStreamRef = useRef<MediaStream | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const audioCtxRef = useRef<AudioContext | null>(null);
+    const videoWsRef = useRef<WebSocket | null>(null);
     const alertWsRef = useRef<WebSocket | null>(null);
     const keepaliveRef = useRef<NodeJS.Timeout | null>(null);
 
     // Exponential backoff state
+    const videoReconnectDelay = useRef(INITIAL_RECONNECT_MS);
     const alertReconnectDelay = useRef(INITIAL_RECONNECT_MS);
 
     // ── Connection & Session State ──
@@ -174,7 +177,9 @@ export function LiveMonitoring() {
         setShowBreakReminder(false);
 
         if (keepaliveRef.current) clearInterval(keepaliveRef.current);
+        videoWsRef.current?.close();
         alertWsRef.current?.close();
+        videoWsRef.current = null;
         alertWsRef.current = null;
     }, [sessionStart]);
 
@@ -231,6 +236,34 @@ export function LiveMonitoring() {
             // Retry after a delay
             setTimeout(startLocalCamera, 3000);
         }
+    }, []);
+
+    // ─────────────────────────────────────────────────
+    //  WEBSOCKET: Video Feed (background - drives CV pipeline)
+    // ─────────────────────────────────────────────────
+    const connectVideoFeed = useCallback(() => {
+        if (videoWsRef.current) videoWsRef.current.close();
+
+        const ws = new WebSocket(WS_VIDEO_URL);
+
+        ws.onopen = () => {
+            videoReconnectDelay.current = INITIAL_RECONNECT_MS;
+        };
+
+        ws.onmessage = () => {
+            // Frames are received but intentionally not rendered.
+            // The connection drives the backend vision pipeline which
+            // broadcasts alerts to /ws/alerts.
+        };
+
+        ws.onclose = () => {
+            const delay = videoReconnectDelay.current;
+            videoReconnectDelay.current = Math.min(delay * 2, MAX_RECONNECT_MS);
+            setTimeout(connectVideoFeed, delay);
+        };
+
+        ws.onerror = () => { };
+        videoWsRef.current = ws;
     }, []);
 
     // ─────────────────────────────────────────────────
@@ -345,12 +378,14 @@ export function LiveMonitoring() {
         setSessionActive(true);
 
         startLocalCamera();
+        connectVideoFeed();
         connectAlerts();
-    }, [startLocalCamera, connectAlerts, userAge]);
+    }, [startLocalCamera, connectVideoFeed, connectAlerts, userAge]);
 
     useEffect(() => {
         return () => {
             if (keepaliveRef.current) clearInterval(keepaliveRef.current);
+            videoWsRef.current?.close();
             alertWsRef.current?.close();
             if (mediaStreamRef.current) {
                 mediaStreamRef.current.getTracks().forEach(t => t.stop());
