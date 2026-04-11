@@ -52,9 +52,9 @@ SEATBELT_TIMEOUT_SEC = 5.0
 PHONE_TIMEOUT_SEC    = 2.0
 
 # YOLO adaptive skip
-YOLO_MIN_SKIP  = 2   # minimum frames to skip between YOLO runs
-YOLO_MAX_SKIP  = 6   # maximum frames to skip
-YOLO_TARGET_MS = 50  # target YOLO latency in ms (aim for < 50ms)
+YOLO_MIN_SKIP  = 5   # minimum frames to skip between YOLO runs
+YOLO_MAX_SKIP  = 15  # maximum frames to skip
+YOLO_TARGET_MS = 30  # target YOLO latency in ms (aim for < 30ms)
 
 FRAME_WIDTH  = 640
 FRAME_HEIGHT = 480
@@ -161,6 +161,7 @@ class VisionPipeline:
         cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
+        cap.set(cv2.CAP_PROP_FPS, 15)  # Cap camera FPS to 15 to avoid buffer buildup
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         if not cap.isOpened():
             raise RuntimeError(f"Cannot open webcam at index {index}.")
@@ -362,7 +363,8 @@ class VisionPipeline:
         self.frame_count += 1
         if self.yolo_model and self.frame_count % self.yolo_skip == 0:
             yolo_start = time.time()
-            results = self.yolo_model(rgb_frame, verbose=False)
+            # Use imgsz=320 to drastically speed up YOLO inference (4x faster than 640)
+            results = self.yolo_model(rgb_frame, imgsz=320, verbose=False)
             yolo_elapsed_ms = (time.time() - yolo_start) * 1000
             self._update_yolo_skip(yolo_elapsed_ms)
 
@@ -484,6 +486,11 @@ class VisionPipeline:
                     return  # Give up if recovery fails
                 consecutive_failures = 0
 
+            # To handle Windows DirectShow buffer lag (the "laggy" delayed feed), 
+            # we flush stale frames by grabbing multiple times if processing is slow.
+            if self._current_fps < 15 and self._current_fps > 0:
+                self.cap.grab() # drop 1 frame to catch up to real-time
+
             ret, frame = self.cap.read()
 
             if not ret:
@@ -498,10 +505,12 @@ class VisionPipeline:
 
             consecutive_failures = 0
 
+            # Scale down frame slightly to speed up entire pipeline if needed
             result = self.process_frame(frame)
             annotated = result["frame"]
 
-            _, buffer = cv2.imencode(".jpg", annotated, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            # Lower JPEG quality to 40 to make transmission ultra-fast
+            _, buffer = cv2.imencode(".jpg", annotated, [cv2.IMWRITE_JPEG_QUALITY, 40])
             frame_b64 = base64.b64encode(buffer).decode("utf-8")
 
             yield {
