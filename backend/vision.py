@@ -41,20 +41,20 @@ EAR_THRESHOLD       = 0.25
 EAR_CONSEC_FRAMES   = 20
 
 # Mouth Aspect Ratio (yawn detection)
-MAR_THRESHOLD       = 0.75
-MAR_CONSEC_FRAMES   = 15
+MAR_THRESHOLD       = 0.50
+MAR_CONSEC_FRAMES   = 5
 
 # Head pose: if nose-tip Y is significantly above chin midpoint
 HEAD_DOWN_THRESHOLD = 0.12   # normalized distance ratio
 
 # Seatbelt & Phone timeouts
 SEATBELT_TIMEOUT_SEC = 5.0
-PHONE_TIMEOUT_SEC    = 2.0
+PHONE_TIMEOUT_SEC    = 1.5
 
 # YOLO adaptive skip
-YOLO_MIN_SKIP  = 5   # minimum frames to skip between YOLO runs
-YOLO_MAX_SKIP  = 15  # maximum frames to skip
-YOLO_TARGET_MS = 30  # target YOLO latency in ms (aim for < 30ms)
+YOLO_MIN_SKIP  = 2   # runs frequently
+YOLO_MAX_SKIP  = 5
+YOLO_TARGET_MS = 60  # target YOLO latency in ms
 
 FRAME_WIDTH  = 640
 FRAME_HEIGHT = 480
@@ -378,7 +378,7 @@ class VisionPipeline:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
 
                     # ── PHONE (Class 67) ──
-                    if label == "cell phone" and conf > 0.25:
+                    if label == "cell phone" and conf > 0.15:
                         phone_detected_this_frame = True
                         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
                         cv2.putText(frame, f"PHONE {conf:.0%}", (x1, y1 - 10),
@@ -402,10 +402,10 @@ class VisionPipeline:
             chin_x = int(result.face_landmarks[0][CHIN_IDX].x * w)
             
             # Predict chest area using face landmarks
-            roi_y1 = min(h - 1, chin_y + int(h * 0.1))
-            roi_y2 = min(h - 1, chin_y + int(h * 0.5))
-            roi_x1 = max(0, chin_x - int(w * 0.25))
-            roi_x2 = min(w - 1, chin_x + int(w * 0.25))
+            roi_y1 = min(h - 1, chin_y + 10)
+            roi_y2 = min(h - 1, chin_y + int(h * 0.6))
+            roi_x1 = max(0, chin_x - int(w * 0.4))
+            roi_x2 = min(w - 1, chin_x + int(w * 0.4))
 
             if roi_y2 > roi_y1 + 10 and roi_x2 > roi_x1 + 10:
                 roi = frame[roi_y1:roi_y2, roi_x1:roi_x2]
@@ -413,18 +413,18 @@ class VisionPipeline:
 
                 gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
                 blur = cv2.GaussianBlur(gray, (5, 5), 0)
-                edges = cv2.Canny(blur, 50, 150, apertureSize=3)
+                edges = cv2.Canny(blur, 30, 100, apertureSize=3)
 
                 lines = cv2.HoughLinesP(
                     edges, 1, np.pi / 180,
-                    threshold=40, minLineLength=30, maxLineGap=10
+                    threshold=15, minLineLength=15, maxLineGap=20
                 )
 
                 if lines is not None:
                     for line in lines:
                         lx1, ly1, lx2, ly2 = line[0]
                         angle = abs(math.atan2(ly2 - ly1, lx2 - lx1) * 180.0 / math.pi)
-                        if 25 < angle < 75:
+                        if 15 < angle < 85:
                             seatbelt_detected_this_frame = True
                             cv2.line(frame,
                                      (roi_x1 + lx1, roi_y1 + ly1),
