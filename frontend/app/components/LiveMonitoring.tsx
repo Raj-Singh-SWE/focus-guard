@@ -130,12 +130,15 @@ export function LiveMonitoring() {
             } else if (isDrowsy) {
                 setAlertType("DROWSINESS DETECTED — WAKE UP!");
             } else if (isYawning) {
-                setAlertType("YAWNING — STAY ALERT!");
+                setAlertType("YAWNING — PLEASE TAKE A BREAK!!");
             } else if (isHeadDown) {
                 setAlertType("EYES OFF ROAD — LOOK AHEAD!");
             } else if (!seatbeltOn) {
                 setAlertType("SEATBELT NOT FASTENED");
             }
+        } else {
+            setAlarmActive(false);
+            setAlertType(null);
         }
     }, [isDrowsy, seatbeltOn, isDistracted, isYawning, isHeadDown]);
 

@@ -359,7 +359,7 @@ class VisionPipeline:
             self.ear_counter = max(0, self.ear_counter - 1)
             self.mar_counter = max(0, self.mar_counter - 1)
 
-        # ─────────── YOLO: Phone + Person (Adaptive Skip) ───────────
+        # ─────────── YOLO: Phone (Adaptive Skip) ───────────
         self.frame_count += 1
         if self.yolo_model and self.frame_count % self.yolo_skip == 0:
             yolo_start = time.time()
@@ -368,7 +368,6 @@ class VisionPipeline:
             yolo_elapsed_ms = (time.time() - yolo_start) * 1000
             self._update_yolo_skip(yolo_elapsed_ms)
 
-            seatbelt_detected_this_frame = False
             phone_detected_this_frame = False
 
             for res in results:
@@ -385,65 +384,6 @@ class VisionPipeline:
                         cv2.putText(frame, f"PHONE {conf:.0%}", (x1, y1 - 10),
                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
-                    # ── PERSON → ROI SEATBELT ──
-                    if label == "person" and conf > 0.35:
-                        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-                        # ── Seatbelt Detection Override ──
-                        if getattr(self, "seatbelt_model", None) is not None:
-                            # Direct neural net classification for Seatbelt
-                            sb_res = self.seatbelt_model(frame, verbose=False, device=self._yolo_device)
-                            for r_sb in sb_res:
-                                for sb_box in r_sb.boxes:
-                                    if int(sb_box.cls[0]) == 0 and float(sb_box.conf[0]) > 0.6:  # Conf > 60%
-                                        seatbelt_detected_this_frame = True
-                                        sx1, sy1, sx2, sy2 = map(int, sb_box.xyxy[0])
-                                        cv2.rectangle(frame, (sx1, sy1), (sx2, sy2), (0, 255, 0), 2)
-                                        cv2.putText(frame, "Seatbelt Active", (sx1, sy1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                                        break
-                        else:
-                            # Fallback Region-of-Interest heuristic logic
-                            box_h = y2 - y1
-                            box_w = x2 - x1
-
-                            # ROI: chest/shoulder area (25%-75% height, 20%-80% width)
-                            roi_y1 = max(0, int(y1 + box_h * 0.25))
-                            roi_y2 = min(h, int(y1 + box_h * 0.75))
-                            roi_x1 = max(0, int(x1 + box_w * 0.20))
-                            roi_x2 = min(w, int(x1 + box_w * 0.80))
-
-                            if roi_y2 > roi_y1 + 10 and roi_x2 > roi_x1 + 10:
-                                roi = frame[roi_y1:roi_y2, roi_x1:roi_x2]
-                                cv2.rectangle(frame, (roi_x1, roi_y1), (roi_x2, roi_y2), (255, 0, 255), 1)
-
-                                gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-                                blur = cv2.GaussianBlur(gray, (5, 5), 0)
-                                edges = cv2.Canny(blur, 50, 150, apertureSize=3)
-
-                                lines = cv2.HoughLinesP(
-                                    edges, 1, np.pi / 180,
-                                    threshold=40, minLineLength=30, maxLineGap=10
-                                )
-
-                                if lines is not None:
-                                    for line in lines:
-                                        lx1, ly1, lx2, ly2 = line[0]
-                                        angle = abs(math.atan2(ly2 - ly1, lx2 - lx1) * 180.0 / math.pi)
-                                        if 25 < angle < 75:
-                                            seatbelt_detected_this_frame = True
-                                            cv2.line(frame,
-                                                     (roi_x1 + lx1, roi_y1 + ly1),
-                                                     (roi_x1 + lx2, roi_y1 + ly2),
-                                                     (0, 255, 255), 3)
-                                            break
-
-            # ── Seatbelt state machine ──
-            if seatbelt_detected_this_frame:
-                self.last_seatbelt_seen = time.time()
-                self.seatbelt_on = True
-            elif time.time() - self.last_seatbelt_seen > SEATBELT_TIMEOUT_SEC:
-                self.seatbelt_on = False
-
             # ── Phone distraction state machine ──
             if phone_detected_this_frame:
                 if self.first_phone_seen == 0.0:
@@ -454,15 +394,60 @@ class VisionPipeline:
                 self.first_phone_seen = 0.0
                 self.phone_detected = False
 
-            alerts["seatbelt_on"] = self.seatbelt_on
-            alerts["phone_detected"] = self.phone_detected
+        # ─────────── SEATBELT ROI (Face Anchor) ───────────
+        seatbelt_detected_this_frame = False
+        
+        if result.face_landmarks:
+            chin_y = int(result.face_landmarks[0][CHIN_IDX].y * h)
+            chin_x = int(result.face_landmarks[0][CHIN_IDX].x * w)
+            
+            # Predict chest area using face landmarks
+            roi_y1 = min(h - 1, chin_y + int(h * 0.1))
+            roi_y2 = min(h - 1, chin_y + int(h * 0.5))
+            roi_x1 = max(0, chin_x - int(w * 0.25))
+            roi_x2 = min(w - 1, chin_x + int(w * 0.25))
 
-            if not self.seatbelt_on:
-                cv2.putText(frame, "NO SEATBELT!", (w // 2 - 100, h - 50),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 3)
-            if self.phone_detected:
-                cv2.putText(frame, "DISTRACTION!", (w // 2 - 90, h - 20),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 3)
+            if roi_y2 > roi_y1 + 10 and roi_x2 > roi_x1 + 10:
+                roi = frame[roi_y1:roi_y2, roi_x1:roi_x2]
+                cv2.rectangle(frame, (roi_x1, roi_y1), (roi_x2, roi_y2), (255, 0, 255), 1)
+
+                gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                blur = cv2.GaussianBlur(gray, (5, 5), 0)
+                edges = cv2.Canny(blur, 50, 150, apertureSize=3)
+
+                lines = cv2.HoughLinesP(
+                    edges, 1, np.pi / 180,
+                    threshold=40, minLineLength=30, maxLineGap=10
+                )
+
+                if lines is not None:
+                    for line in lines:
+                        lx1, ly1, lx2, ly2 = line[0]
+                        angle = abs(math.atan2(ly2 - ly1, lx2 - lx1) * 180.0 / math.pi)
+                        if 25 < angle < 75:
+                            seatbelt_detected_this_frame = True
+                            cv2.line(frame,
+                                     (roi_x1 + lx1, roi_y1 + ly1),
+                                     (roi_x1 + lx2, roi_y1 + ly2),
+                                     (0, 255, 255), 3)
+                            break
+
+        # ── Seatbelt state machine ──
+        if seatbelt_detected_this_frame:
+            self.last_seatbelt_seen = time.time()
+            self.seatbelt_on = True
+        elif time.time() - self.last_seatbelt_seen > SEATBELT_TIMEOUT_SEC:
+            self.seatbelt_on = False
+
+        alerts["seatbelt_on"] = self.seatbelt_on
+        alerts["phone_detected"] = self.phone_detected
+
+        if not self.seatbelt_on:
+            cv2.putText(frame, "NO SEATBELT!", (w // 2 - 100, h - 50),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 3)
+        if self.phone_detected:
+            cv2.putText(frame, "DISTRACTION!", (w // 2 - 90, h - 20),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 3)
 
         # ── FPS + YOLO latency overlay ──
         self._update_fps()
