@@ -377,63 +377,63 @@ class VisionPipeline:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
 
                     # ── PHONE (Class 67) ──
-                    if label == "cell phone" and conf > 0.4:
+                    if label == "cell phone" and conf > 0.25:
                         phone_detected_this_frame = True
                         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
                         cv2.putText(frame, f"PHONE {conf:.0%}", (x1, y1 - 10),
                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
                     # ── PERSON → ROI SEATBELT ──
-                    if label == "person" and conf > 0.5:
+                    if label == "person" and conf > 0.35:
                         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-                    # ── Seatbelt Detection Override ──
-                    if getattr(self, "seatbelt_model", None) is not None:
-                        # Direct neural net classification for Seatbelt
-                        sb_res = self.seatbelt_model(frame, verbose=False, device=self._yolo_device)
-                        for r_sb in sb_res:
-                            for sb_box in r_sb.boxes:
-                                if int(sb_box.cls[0]) == 0 and float(sb_box.conf[0]) > 0.6:  # Conf > 60%
-                                    seatbelt_detected_this_frame = True
-                                    sx1, sy1, sx2, sy2 = map(int, sb_box.xyxy[0])
-                                    cv2.rectangle(frame, (sx1, sy1), (sx2, sy2), (0, 255, 0), 2)
-                                    cv2.putText(frame, "Seatbelt Active", (sx1, sy1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                                    break
-                    else:
-                        # Fallback Region-of-Interest heuristic logic
-                        box_h = y2 - y1
-                        box_w = x2 - x1
-
-                        # ROI: chest/shoulder area (25%-75% height, 20%-80% width)
-                        roi_y1 = max(0, int(y1 + box_h * 0.25))
-                        roi_y2 = min(h, int(y1 + box_h * 0.75))
-                        roi_x1 = max(0, int(x1 + box_w * 0.20))
-                        roi_x2 = min(w, int(x1 + box_w * 0.80))
-
-                        if roi_y2 > roi_y1 + 10 and roi_x2 > roi_x1 + 10:
-                            roi = frame[roi_y1:roi_y2, roi_x1:roi_x2]
-                            cv2.rectangle(frame, (roi_x1, roi_y1), (roi_x2, roi_y2), (255, 0, 255), 1)
-
-                            gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-                            blur = cv2.GaussianBlur(gray, (5, 5), 0)
-                            edges = cv2.Canny(blur, 50, 150, apertureSize=3)
-
-                            lines = cv2.HoughLinesP(
-                                edges, 1, np.pi / 180,
-                                threshold=40, minLineLength=30, maxLineGap=10
-                            )
-
-                            if lines is not None:
-                                for line in lines:
-                                    lx1, ly1, lx2, ly2 = line[0]
-                                    angle = abs(math.atan2(ly2 - ly1, lx2 - lx1) * 180.0 / math.pi)
-                                    if 25 < angle < 75:
+                        # ── Seatbelt Detection Override ──
+                        if getattr(self, "seatbelt_model", None) is not None:
+                            # Direct neural net classification for Seatbelt
+                            sb_res = self.seatbelt_model(frame, verbose=False, device=self._yolo_device)
+                            for r_sb in sb_res:
+                                for sb_box in r_sb.boxes:
+                                    if int(sb_box.cls[0]) == 0 and float(sb_box.conf[0]) > 0.6:  # Conf > 60%
                                         seatbelt_detected_this_frame = True
-                                        cv2.line(frame,
-                                                 (roi_x1 + lx1, roi_y1 + ly1),
-                                                 (roi_x1 + lx2, roi_y1 + ly2),
-                                                 (0, 255, 255), 3)
+                                        sx1, sy1, sx2, sy2 = map(int, sb_box.xyxy[0])
+                                        cv2.rectangle(frame, (sx1, sy1), (sx2, sy2), (0, 255, 0), 2)
+                                        cv2.putText(frame, "Seatbelt Active", (sx1, sy1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                                         break
+                        else:
+                            # Fallback Region-of-Interest heuristic logic
+                            box_h = y2 - y1
+                            box_w = x2 - x1
+
+                            # ROI: chest/shoulder area (25%-75% height, 20%-80% width)
+                            roi_y1 = max(0, int(y1 + box_h * 0.25))
+                            roi_y2 = min(h, int(y1 + box_h * 0.75))
+                            roi_x1 = max(0, int(x1 + box_w * 0.20))
+                            roi_x2 = min(w, int(x1 + box_w * 0.80))
+
+                            if roi_y2 > roi_y1 + 10 and roi_x2 > roi_x1 + 10:
+                                roi = frame[roi_y1:roi_y2, roi_x1:roi_x2]
+                                cv2.rectangle(frame, (roi_x1, roi_y1), (roi_x2, roi_y2), (255, 0, 255), 1)
+
+                                gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                                blur = cv2.GaussianBlur(gray, (5, 5), 0)
+                                edges = cv2.Canny(blur, 50, 150, apertureSize=3)
+
+                                lines = cv2.HoughLinesP(
+                                    edges, 1, np.pi / 180,
+                                    threshold=40, minLineLength=30, maxLineGap=10
+                                )
+
+                                if lines is not None:
+                                    for line in lines:
+                                        lx1, ly1, lx2, ly2 = line[0]
+                                        angle = abs(math.atan2(ly2 - ly1, lx2 - lx1) * 180.0 / math.pi)
+                                        if 25 < angle < 75:
+                                            seatbelt_detected_this_frame = True
+                                            cv2.line(frame,
+                                                     (roi_x1 + lx1, roi_y1 + ly1),
+                                                     (roi_x1 + lx2, roi_y1 + ly2),
+                                                     (0, 255, 255), 3)
+                                            break
 
             # ── Seatbelt state machine ──
             if seatbelt_detected_this_frame:
