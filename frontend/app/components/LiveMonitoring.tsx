@@ -349,13 +349,14 @@ export function LiveMonitoring() {
         }
         const audio = audioRef.current;
         if (audio) {
-            audio.load();
-            audio.volume = 0;
-            audio.play().then(() => {
-                audio.pause();
-                audio.currentTime = 0;
-                audio.volume = 1;
-            }).catch(() => { });
+            audio.volume = 1.0;
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }).catch((err) => console.log("Audio unlock:", err));
+            }
         }
 
         // Track session in DB with user's email
